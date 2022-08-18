@@ -6,16 +6,33 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import ThemeSwitchAIO
 sparklingdf=pd.read_csv(r'C:\Users\flavi\OneDrive\Desktop\Dataset\Sparkling.csv')
 #df.rename(columns={'under_trial': 'under trial', 'state_name': 'state'}, inplace=True)
+template_theme1 = "sketchy"
+template_theme2 = "darkly"
+url_theme1 = dbc.themes.SKETCHY
+url_theme2 = dbc.themes.DARKLY
+theme_switch = ThemeSwitchAIO(aio_id="theme", themes=[url_theme1, url_theme2])
 
-app = dash.Dash(__name__, external_stylesheets= [dbc.themes.CYBORG, dbc.icons.BOOTSTRAP, dbc.icons.FONT_AWESOME])
+app = dash.Dash(__name__, external_stylesheets= [dbc.themes.SOLAR])
+
+theme_colors = ["primary","danger","info","light","dark", "link",]
+buttons = html.Div(
+    [dbc.Button(f"{color}", color=f"{color}", size="sm") for color in theme_colors]
+)
+colors = html.Div(["Theme Colors:", buttons], className="mt-2")
 
 app.layout = html.Div([
     html.Div(children=[
         html.Button('Add Chart', id='add-chart', n_clicks=0),
     ]),
-    html.Div(id='container', children=[])
+    html.Div(id='container', children=[]),
+    dbc.Container(
+    dbc.Row(dbc.Col([ theme_switch, colors,])),
+    className="m-4 dbc",
+    fluid=True,
+)
 ])
 
 
@@ -83,25 +100,27 @@ def display_graphs(n_clicks, div_children):
     [Input(component_id={'type': 'dynamic-dpn-s', 'index': MATCH}, component_property='value'),
      Input(component_id={'type': 'dynamic-dpn-ctg', 'index': MATCH}, component_property='value'),
      Input(component_id={'type': 'dynamic-dpn-num', 'index': MATCH}, component_property='value'),
-     Input({'type': 'dynamic-choice', 'index': MATCH}, 'value')]
+     Input({'type': 'dynamic-choice', 'index': MATCH}, 'value'),
+     Input(ThemeSwitchAIO.ids.switch("theme"), "value")]
 )
-def update_graph(s_value, ctg_value, num_value, chart_choice):
+def update_graph(s_value, ctg_value, num_value, chart_choice,toggle):
     print(s_value)
+    template = template_theme1 if toggle else template_theme2
     dff = sparklingdf[sparklingdf['Country'].isin(s_value)]
 
     if chart_choice == 'bar':
         dff = dff.groupby([ctg_value], as_index=False)[['NumberOfRatings', 'Price', 'Rating']].sum()
-        fig = px.bar(dff, x=ctg_value, y=num_value)
+        fig = px.bar(dff, x=ctg_value, y=num_value,template=template)
         return fig
     elif chart_choice == 'line':
         if len(s_value) == 0:
             return {}
         else:
             dff = dff.groupby([ctg_value, 'Year'], as_index=False)[['NumberOfRatings', 'Price', 'Rating']].sum()
-            fig = px.line(dff, x='Year', y=num_value, color=ctg_value)
+            fig = px.line(dff, x='Year', y=num_value, color=ctg_value,template=template)
             return fig
     elif chart_choice == 'pie':
-        fig = px.pie(dff, names=ctg_value, values=num_value)
+        fig = px.pie(dff, names=ctg_value, values=num_value,template=template)
         return fig
 
 
