@@ -10,7 +10,9 @@ app.layout = html.Div([
     html.Button("Add", id="add"),
     html.Button("Clear Done", id="clear-done"),
     html.Div(id="list-container"),
-    html.Div(id="totals")
+    html.Div(id="totals"),
+    html.Div([
+    dcc.Checklist(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])])
 ])
 
 style_todo = {"display": "inline", "margin": "10px"}
